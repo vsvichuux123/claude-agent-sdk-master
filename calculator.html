@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calculator</title>
+    <!--
+      Using Tailwind CSS from a CDN for a modern and responsive design.
+      This allows us to style the application with utility classes.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            /* Using the 'Inter' font for a clean, modern look. */
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Calculator Container -->
+    <div class="bg-gray-800 p-6 rounded-3xl shadow-2xl max-w-sm w-full transform transition-all duration-300 hover:scale-105">
+        
+        <!-- Display Screen -->
+        <div class="bg-gray-900 p-4 mb-4 rounded-xl shadow-inner border border-gray-700">
+            <input 
+                id="display" 
+                type="text" 
+                readonly 
+                class="w-full text-right bg-transparent text-white text-4xl sm:text-5xl font-light outline-none border-none py-2 px-1 focus:outline-none" 
+                value="0"
+            >
+        </div>
+
+        <!-- Buttons Grid -->
+        <div class="grid grid-cols-4 gap-3">
+            <!-- Row 1 with parentheses and the new '+' button -->
+            <button class="text-white text-2xl font-bold bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('(')">(</button>
+            <button class="text-white text-2xl font-bold bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay(')')">)</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('+')">+</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('/')">/</button>
+
+            <!-- Row 2 -->
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('7')">7</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('8')">8</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('9')">9</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('*')">*</button>
+
+            <!-- Row 3 -->
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('4')">4</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('5')">5</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('6')">6</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('-')">-</button>
+
+            <!-- Row 4 -->
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('1')">1</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('2')">2</button>
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('3')">3</button>
+            <!-- The tall 'C' button -->
+            <button class="row-span-2 text-white text-2xl font-bold bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="clearDisplay()">C</button>
+
+            <!-- Row 5 -->
+            <button class="text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('.')">.</button>
+            <button class=" text-white text-2xl font-bold bg-gray-700 hover:bg-gray-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="appendToDisplay('0')">0</button>
+            <button class="text-white text-2xl font-bold bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 py-4 rounded-xl shadow-md active:shadow-inner" onclick="calculateResult()">=</button>
+        </div>
+
+        <!-- Gemini-powered feature -->
+        <div id="gemini-feature" class="mt-4 hidden">
+            <button id="explain-btn" class="w-full text-white text-lg font-bold bg-teal-500 hover:bg-teal-600 transition-colors duration-200 py-3 rounded-xl shadow-md active:shadow-inner" onclick="explainCalculation()">✨ Explain Calculation</button>
+            <div id="explanation-output" class="bg-gray-900 mt-3 p-4 rounded-xl text-white text-sm whitespace-pre-wrap"></div>
+        </div>
+        
+    </div>
+
+    <!-- JavaScript for Calculator Logic -->
+    <script>
+        const display = document.getElementById('display');
+        const geminiFeatureDiv = document.getElementById('gemini-feature');
+        const explanationOutput = document.getElementById('explanation-output');
+
+        let currentInput = '';
+        let isResultDisplayed = false;
+        let lastCalculation = null; // Store the last calculation for the explanation feature
+
+        /**
+         * Appends the clicked value to the display.
+         * @param {string} value The number or operator to add.
+         */
+        function appendToDisplay(value) {
+            if (isResultDisplayed) {
+                currentInput = '';
+                isResultDisplayed = false;
+                // Hide the explanation feature when starting a new calculation
+                geminiFeatureDiv.classList.add('hidden');
+                explanationOutput.textContent = '';
+            }
+            if (display.value === '0' && value !== '.') {
+                display.value = value;
+            } else {
+                display.value += value;
+            }
+            currentInput = display.value;
+        }
+
+        /**
+         * Clears the entire display and resets the calculator state.
+         */
+        function clearDisplay() {
+            display.value = '0';
+            currentInput = '';
+            isResultDisplayed = false;
+            lastCalculation = null;
+            // Hide the explanation feature when clearing
+            geminiFeatureDiv.classList.add('hidden');
+            explanationOutput.textContent = '';
+        }
+
+        /**
+         * Calculates the final result of the expression on the display.
+         */
+        function calculateResult() {
+            try {
+                // Store the expression before evaluating it
+                lastCalculation = {
+                    expression: currentInput,
+                    result: eval(currentInput)
+                };
+                display.value = lastCalculation.result;
+                currentInput = lastCalculation.result.toString();
+                isResultDisplayed = true;
+
+                // Show the Gemini explanation button after a successful calculation
+                geminiFeatureDiv.classList.remove('hidden');
+
+            } catch (error) {
+                display.value = 'Error';
+                currentInput = '';
+                isResultDisplayed = true;
+                lastCalculation = null;
+                geminiFeatureDiv.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Uses the Gemini API to get an explanation of the last calculation.
+         */
+        async function explainCalculation() {
+            if (!lastCalculation) {
+                explanationOutput.textContent = 'No calculation to explain.';
+                return;
+            }
+
+            // Set the loading state
+            explanationOutput.textContent = 'Thinking...';
+            
+            const prompt = `Explain the following calculation in a simple and educational way: ${lastCalculation.expression} = ${lastCalculation.result}. Please provide the steps involved.`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+            
+            // This is the API key that will be provided by the runtime.
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    explanationOutput.textContent = text;
+                } else {
+                    explanationOutput.textContent = 'Could not generate an explanation. Please try again.';
+                }
+            } catch (error) {
+                console.error('Error fetching explanation:', error);
+                explanationOutput.textContent = 'An error occurred. Please check the console for details.';
+            }
+        }
+    </script>
+</body>
+</html>
